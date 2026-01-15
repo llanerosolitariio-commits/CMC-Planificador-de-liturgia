@@ -3,84 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMC Liturgy Planner Pro</title>
+    <title>CMC Liturgy Planner Pro + PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #f1f5f9; font-family: 'Segoe UI', sans-serif; }
         .day-card { transition: all 0.3s ease; border-radius: 24px; background: white; border: 1px solid #e2e8f0; }
-        .day-card:focus-within { border-color: #f8ad9d; transform: scale(1.02); }
+        .day-card:focus-within { border-color: #f8ad9d; transform: scale(1.01); }
         .sunday-highlight { background: linear-gradient(135deg, #ffffff 0%, #fff9f7 100%); border-top: 6px solid #f8ad9d; }
-        textarea { resize: none; border: none; background: transparent; width: 100%; outline: none; min-height: 100px; font-size: 0.95rem; line-height: 1.6; }
+        textarea { resize: none; border: none; background: transparent; width: 100%; outline: none; min-height: 100px; font-size: 0.95rem; }
+        .pdf-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; }
+        .pdf-zone:hover { border-color: #f8ad9d; background: #fffaf9; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 text-slate-800">
 
-    <div class="max-w-5xl mx-auto">
-        <header class="bg-white p-6 rounded-[32px] shadow-sm mb-8 flex flex-col xl:flex-row justify-between items-center gap-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="bg-white p-6 rounded-[32px] shadow-sm mb-8 flex flex-col xl:flex-row justify-between items-center gap-6 border border-slate-200">
             <div class="text-center xl:text-left">
-                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">CMC Liturgy Planner</h1>
-                <p class="text-slate-400 text-xs font-bold tracking-widest italic">Gestión de Música Sacra</p>
+                <h1 class="text-2xl font-black tracking-tighter uppercase">CMC Liturgy Planner</h1>
+                <p class="text-slate-400 text-xs font-bold tracking-widest italic">Música & Documentos Sacros</p>
             </div>
             
             <div class="flex flex-wrap justify-center gap-3">
-                <button onclick="clearAll()" class="bg-red-50 text-red-600 px-5 py-3 rounded-2xl font-bold hover:bg-red-100 transition flex items-center gap-2 text-sm">
-                    <i class="fas fa-trash-alt"></i> NUEVA SEMANA
+                <button onclick="clearAll()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition text-sm">
+                    <i class="fas fa-trash-alt mr-1"></i> NUEVA SEMANA
                 </button>
-                
-                <button onclick="saveAll()" class="bg-slate-100 text-slate-700 px-5 py-3 rounded-2xl font-bold hover:bg-slate-200 transition text-sm">
-                    <i class="fas fa-save mr-2"></i>GUARDAR
+                <button onclick="saveAll()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-bold hover:bg-slate-200 transition text-sm">
+                    <i class="fas fa-save mr-1"></i> GUARDAR
                 </button>
-
-                <button onclick="sendWhatsApp()" class="bg-[#25D366] text-white px-6 py-3 rounded-2xl font-bold hover:opacity-90 transition flex items-center shadow-md text-sm">
+                <button onclick="sendWhatsApp()" class="bg-[#25D366] text-white px-6 py-2 rounded-xl font-bold hover:opacity-90 transition flex items-center shadow-md text-sm">
                     <i class="fab fa-whatsapp text-xl mr-2"></i> ENVIAR AL CORO
                 </button>
             </div>
         </header>
 
-        <div id="daysGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <div class="xl:col-span-3 space-y-6">
+                <div id="daysGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                <div id="sundayContainer"></div>
             </div>
 
-        <div id="sundayContainer" class="mt-6">
-             </div>
+            <div class="xl:col-span-1">
+                <div class="bg-white p-6 rounded-[24px] border border-slate-200 sticky top-8">
+                    <h3 class="font-black text-slate-800 uppercase text-sm mb-4 flex items-center gap-2">
+                        <i class="fas fa-file-pdf text-red-500"></i> Archivo Adjunto
+                    </h3>
+                    
+                    <div class="pdf-zone rounded-2xl p-6 text-center cursor-pointer relative" id="dropZone">
+                        <input type="file" id="pdfInput" accept="application/pdf" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <div id="pdfPrompt">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-slate-300 mb-2"></i>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Subir PDF</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Partituras o Guiones</p>
+                        </div>
+                        <div id="pdfInfo" class="hidden">
+                            <i class="fas fa-file-check text-3xl text-green-500 mb-2"></i>
+                            <p id="pdfName" class="text-xs font-bold text-slate-700 truncate"></p>
+                            <button onclick="removePDF()" class="mt-2 text-[10px] text-red-500 font-bold hover:underline">ELIMINAR</button>
+                        </div>
+                    </div>
 
-        <p class="text-center mt-12 text-slate-400 text-[10px] uppercase font-bold tracking-[0.3em]">CMC Music - 2026</p>
+                    <div id="pdfPreviewContainer" class="mt-4 hidden">
+                         <a id="pdfLink" href="#" target="_blank" class="block w-full text-center bg-slate-900 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-black transition">
+                            Ver PDF Cargado
+                         </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const grid = document.getElementById('daysGrid');
         const sundayContainer = document.getElementById('sundayContainer');
+        const pdfInput = document.getElementById('pdfInput');
 
-        function renderInterface() {
-            grid.innerHTML = '';
-            days.forEach(day => {
-                grid.innerHTML += `
-                    <div class="day-card p-6">
-                        <h2 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">${day}</h2>
-                        <div class="flex gap-3">
-                            <span class="text-[#f8ad9d] font-bold">—</span>
-                            <textarea id="input-${day.toLowerCase()}" placeholder="Escribe los cantos..."></textarea>
-                        </div>
-                    </div>
-                `;
-            });
-
-            sundayContainer.innerHTML = `
-                <div class="day-card p-8 sunday-highlight">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 class="text-2xl font-black text-slate-800 italic uppercase">DOMINGO</h2>
-                            <p class="text-xs text-[#e07a5f] font-bold uppercase tracking-tighter">Misa Solemne / Misa Mayor</p>
-                        </div>
-                        <i class="fas fa-church text-3xl text-[#f8ad9d] opacity-50"></i>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="text-[#f8ad9d] font-bold text-2xl">—</span>
-                        <textarea id="input-domingo" class="min-h-[180px] text-lg" placeholder="Entrada:\nKyrie:\nGloria:\nSalmo:\nAleluya:\nOfertorio:\nSanto:\nCordero:\nComunión:\nSalida:"></textarea>
+        // Renderizar Interfaz
+        days.forEach(day => {
+            grid.innerHTML += `
+                <div class="day-card p-6">
+                    <h2 class="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-3">${day}</h2>
+                    <div class="flex gap-3">
+                        <span class="text-[#f8ad9d] font-bold">—</span>
+                        <textarea id="input-${day.toLowerCase()}" placeholder="Cantos..."></textarea>
                     </div>
                 </div>
             `;
+        });
+
+        sundayContainer.innerHTML = `
+            <div class="day-card p-8 sunday-highlight mt-6 border-dashed border-2 border-slate-200">
+                <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-4">DOMINGO</h2>
+                <textarea id="input-domingo" class="min-h-[150px]" placeholder="Entrada, Gloria, Salmo..."></textarea>
+            </div>
+        `;
+
+        // Manejo de PDF
+        pdfInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === "application/pdf") {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    localStorage.setItem('cmc_pdf', base64);
+                    localStorage.setItem('cmc_pdf_name', file.name);
+                    showPDF(file.name, base64);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function showPDF(name, data) {
+            document.getElementById('pdfPrompt').classList.add('hidden');
+            document.getElementById('pdfInfo').classList.remove('hidden');
+            document.getElementById('pdfPreviewContainer').classList.remove('hidden');
+            document.getElementById('pdfName').innerText = name;
+            document.getElementById('pdfLink').href = data;
+        }
+
+        function removePDF() {
+            localStorage.removeItem('cmc_pdf');
+            localStorage.removeItem('cmc_pdf_name');
+            location.reload();
         }
 
         function saveAll() {
@@ -89,38 +135,28 @@
                 data[d.toLowerCase()] = document.getElementById(`input-${d.toLowerCase()}`).value;
             });
             localStorage.setItem('cmc_liturgy_data', JSON.stringify(data));
-            alert('✅ Plan guardado localmente.');
+            alert('✅ Plan guardado.');
         }
 
         function clearAll() {
-            if (confirm("⚠️ ¿Estás seguro? Se borrarán todos los cantos de la semana actual.")) {
-                [...days, 'Domingo'].forEach(d => {
-                    document.getElementById(`input-${d.toLowerCase()}`).value = '';
-                });
-                localStorage.removeItem('cmc_liturgy_data');
+            if (confirm("¿Limpiar toda la semana?")) {
+                localStorage.clear();
+                location.reload();
             }
         }
 
         function sendWhatsApp() {
-            let message = "🎼 *PLANIFICACIÓN LITÚRGICA - CMC MUSIC* 🎼\n\n";
-            let hasContent = false;
-
+            let message = "🎼 *PLANIFICACIÓN - CMC MUSIC* 🎼\n\n";
             [...days, 'Domingo'].forEach(d => {
                 const val = document.getElementById(`input-${d.toLowerCase()}`).value.trim();
-                if (val) {
-                    message += `*${d.toUpperCase()}* 🗓️\n${val}\n\n`;
-                    hasContent = true;
-                }
+                if (val) message += `*${d.toUpperCase()}*:\n${val}\n\n`;
             });
-
-            if (!hasContent) return alert("El plan está vacío. Escribe algo antes de enviar.");
-
-            message += "_Enviado vía CMC Liturgy App_";
+            if (localStorage.getItem('cmc_pdf_name')) {
+                message += `📎 *Archivo adjunto:* ${localStorage.getItem('cmc_pdf_name')}\n_(El archivo está cargado en el sistema local)_`;
+            }
             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // Inicialización
-        renderInterface();
         window.onload = () => {
             const saved = JSON.parse(localStorage.getItem('cmc_liturgy_data'));
             if (saved) {
@@ -129,6 +165,9 @@
                     if (el) el.value = saved[key];
                 });
             }
+            const savedPDF = localStorage.getItem('cmc_pdf');
+            const savedPDFName = localStorage.getItem('cmc_pdf_name');
+            if (savedPDF) showPDF(savedPDFName, savedPDF);
         };
     </script>
 </body>
