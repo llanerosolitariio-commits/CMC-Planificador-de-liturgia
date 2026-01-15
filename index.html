@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMC Liturgy Planner Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Segoe UI', sans-serif; }
+        .day-card { transition: all 0.3s ease; border-radius: 24px; background: white; border: 1px solid #e2e8f0; }
+        .day-card:focus-within { border-color: #f8ad9d; transform: scale(1.02); }
+        .sunday-highlight { background: linear-gradient(135deg, #ffffff 0%, #fff9f7 100%); border-top: 6px solid #f8ad9d; }
+        textarea { resize: none; border: none; background: transparent; width: 100%; outline: none; min-height: 100px; font-size: 0.95rem; line-height: 1.6; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <header class="bg-white p-6 rounded-[32px] shadow-sm mb-8 flex flex-col xl:flex-row justify-between items-center gap-6">
+            <div class="text-center xl:text-left">
+                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">CMC Liturgy Planner</h1>
+                <p class="text-slate-400 text-xs font-bold tracking-widest italic">Gestión de Música Sacra</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="clearAll()" class="bg-red-50 text-red-600 px-5 py-3 rounded-2xl font-bold hover:bg-red-100 transition flex items-center gap-2 text-sm">
+                    <i class="fas fa-trash-alt"></i> NUEVA SEMANA
+                </button>
+                
+                <button onclick="saveAll()" class="bg-slate-100 text-slate-700 px-5 py-3 rounded-2xl font-bold hover:bg-slate-200 transition text-sm">
+                    <i class="fas fa-save mr-2"></i>GUARDAR
+                </button>
+
+                <button onclick="sendWhatsApp()" class="bg-[#25D366] text-white px-6 py-3 rounded-2xl font-bold hover:opacity-90 transition flex items-center shadow-md text-sm">
+                    <i class="fab fa-whatsapp text-xl mr-2"></i> ENVIAR AL CORO
+                </button>
+            </div>
+        </header>
+
+        <div id="daysGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+
+        <div id="sundayContainer" class="mt-6">
+             </div>
+
+        <p class="text-center mt-12 text-slate-400 text-[10px] uppercase font-bold tracking-[0.3em]">CMC Music - 2026</p>
+    </div>
+
+    <script>
+        const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const grid = document.getElementById('daysGrid');
+        const sundayContainer = document.getElementById('sundayContainer');
+
+        function renderInterface() {
+            grid.innerHTML = '';
+            days.forEach(day => {
+                grid.innerHTML += `
+                    <div class="day-card p-6">
+                        <h2 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">${day}</h2>
+                        <div class="flex gap-3">
+                            <span class="text-[#f8ad9d] font-bold">—</span>
+                            <textarea id="input-${day.toLowerCase()}" placeholder="Escribe los cantos..."></textarea>
+                        </div>
+                    </div>
+                `;
+            });
+
+            sundayContainer.innerHTML = `
+                <div class="day-card p-8 sunday-highlight">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 italic uppercase">DOMINGO</h2>
+                            <p class="text-xs text-[#e07a5f] font-bold uppercase tracking-tighter">Misa Solemne / Misa Mayor</p>
+                        </div>
+                        <i class="fas fa-church text-3xl text-[#f8ad9d] opacity-50"></i>
+                    </div>
+                    <div class="flex gap-4">
+                        <span class="text-[#f8ad9d] font-bold text-2xl">—</span>
+                        <textarea id="input-domingo" class="min-h-[180px] text-lg" placeholder="Entrada:\nKyrie:\nGloria:\nSalmo:\nAleluya:\nOfertorio:\nSanto:\nCordero:\nComunión:\nSalida:"></textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveAll() {
+            const data = {};
+            [...days, 'Domingo'].forEach(d => {
+                data[d.toLowerCase()] = document.getElementById(`input-${d.toLowerCase()}`).value;
+            });
+            localStorage.setItem('cmc_liturgy_data', JSON.stringify(data));
+            alert('✅ Plan guardado localmente.');
+        }
+
+        function clearAll() {
+            if (confirm("⚠️ ¿Estás seguro? Se borrarán todos los cantos de la semana actual.")) {
+                [...days, 'Domingo'].forEach(d => {
+                    document.getElementById(`input-${d.toLowerCase()}`).value = '';
+                });
+                localStorage.removeItem('cmc_liturgy_data');
+            }
+        }
+
+        function sendWhatsApp() {
+            let message = "🎼 *PLANIFICACIÓN LITÚRGICA - CMC MUSIC* 🎼\n\n";
+            let hasContent = false;
+
+            [...days, 'Domingo'].forEach(d => {
+                const val = document.getElementById(`input-${d.toLowerCase()}`).value.trim();
+                if (val) {
+                    message += `*${d.toUpperCase()}* 🗓️\n${val}\n\n`;
+                    hasContent = true;
+                }
+            });
+
+            if (!hasContent) return alert("El plan está vacío. Escribe algo antes de enviar.");
+
+            message += "_Enviado vía CMC Liturgy App_";
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Inicialización
+        renderInterface();
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('cmc_liturgy_data'));
+            if (saved) {
+                Object.keys(saved).forEach(key => {
+                    const el = document.getElementById(`input-${key}`);
+                    if (el) el.value = saved[key];
+                });
+            }
+        };
+    </script>
+</body>
+</html>
